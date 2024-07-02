@@ -19,23 +19,24 @@ typedef struct {
 #define WINDOW_WIDTH 16 * SCREEN_FACTOR
 #define WINDOW_HEIGHT 9 * SCREEN_FACTOR
 
-#define BIRDSEYE_SIZE 200.
+#define BIRDSEYE_SIZE 300.
 #define LOOK_SPEED 200
+#define PLAYER_SPEED 0.025
 
-#define COLLISION_BORDER 0.5
+#define COLLISION_BORDER 0.25
 
 Tile map[MAP_HEIGHT][MAP_WIDTH] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+    {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1},
+    {1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1},
+    {1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1},
+    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+    {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
@@ -70,7 +71,7 @@ void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
         (Vector2){pos.x + col * cell_w, pos.y},
         (Vector2){pos.x + col * cell_w, pos.y + MAP_WIDTH * cell_w},
         1, 
-        GREEN
+        GRAY
       );
     }
 
@@ -78,7 +79,7 @@ void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
       (Vector2){pos.x,                      pos.y + row * cell_h}, 
       (Vector2){pos.x + MAP_WIDTH * cell_w, pos.y + row * cell_h},
       1, 
-      GREEN
+      GRAY
     );
   }
 
@@ -119,7 +120,7 @@ int IsCollidingWithWalls(Vector2 pos){
 }
 
 void MoveUp(Player *player){
- Vector2 pos = Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), 0.1));
+ Vector2 pos = Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), PLAYER_SPEED));
  if(IsCollidingWithWalls(pos)){
     return;
   }
@@ -127,7 +128,7 @@ void MoveUp(Player *player){
 }
 
 void MoveDown(Player *player){
- Vector2 pos= Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), -0.1));
+ Vector2 pos= Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), -PLAYER_SPEED));
  if(IsCollidingWithWalls(pos)){
     return;
   }
@@ -141,8 +142,8 @@ int main(int argc, char *argv[]) {
 
   Player player = {
     .pos = (Vector2) {
-      .x = 2,
-      .y = 2
+      .x = 1.5,
+      .y = 1.5
     },
     .angle = (3*PI)/2
   };
