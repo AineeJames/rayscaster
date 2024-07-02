@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <stdint.h>
+#include <assert.h>
 
 typedef enum {
   FLOOR,
@@ -20,6 +21,8 @@ typedef struct {
 
 #define BIRDSEYE_SIZE 200.
 #define LOOK_SPEED 200
+
+#define COLLISION_BORDER 0.5
 
 Tile map[MAP_HEIGHT][MAP_WIDTH] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -88,6 +91,49 @@ void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
 
 }
 
+// returns 0 if no collision
+int IsCollidingWithWalls(Vector2 pos){
+ for(int i = 0; i < 4; i++){
+ Tile player_tile;
+ switch (i){
+      case 0:
+        player_tile = map[(uint8_t)(pos.y + COLLISION_BORDER)][(uint8_t)(pos.x + COLLISION_BORDER)];
+        break;
+      case 1: 
+        player_tile = map[(uint8_t)(pos.y - COLLISION_BORDER)][(uint8_t)(pos.x + COLLISION_BORDER)];
+        break;
+      case 2:
+        player_tile = map[(uint8_t)(pos.y - COLLISION_BORDER)][(uint8_t)(pos.x - COLLISION_BORDER)];
+        break;
+      case 3:
+        player_tile = map[(uint8_t)(pos.y + COLLISION_BORDER)][(uint8_t)(pos.x - COLLISION_BORDER)];
+        break;
+      default:
+        assert(0 && "UNREACHABLE");
+    }
+ if(player_tile == WALL){
+    return 1;
+  }
+ }
+  return 0;
+}
+
+void MoveUp(Player *player){
+ Vector2 pos = Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), 0.1));
+ if(IsCollidingWithWalls(pos)){
+    return;
+  }
+ player->pos = pos;
+}
+
+void MoveDown(Player *player){
+ Vector2 pos= Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), -0.1));
+ if(IsCollidingWithWalls(pos)){
+    return;
+  }
+ player->pos = pos;
+}
+
 int main(int argc, char *argv[]) {
 
   InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Ray's caster");
@@ -110,10 +156,10 @@ int main(int argc, char *argv[]) {
         player.angle += PI/LOOK_SPEED;
     }
     if (IsKeyDown(KEY_UP)) {
-      player.pos = Vector2Add(player.pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player.angle-PI), 0.1));
+      MoveUp(&player);
     }
     if (IsKeyDown(KEY_DOWN)) {
-      player.pos = Vector2Add(player.pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player.angle-PI), -0.1));
+      MoveDown(&player);
     }
 
     BeginDrawing();
