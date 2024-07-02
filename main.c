@@ -19,28 +19,32 @@ typedef struct {
 #define WINDOW_WIDTH 16 * SCREEN_FACTOR
 #define WINDOW_HEIGHT 9 * SCREEN_FACTOR
 
-#define BIRDSEYE_SIZE 200.
+#define BIRDSEYE_SIZE 300.
 #define LOOK_SPEED 200
+#define PLAYER_SPEED 0.025
 
-#define COLLISION_BORDER 0.5
+#define COLLISION_BORDER 0.25
 
 Tile map[MAP_HEIGHT][MAP_WIDTH] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+    {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1},
+    {1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1},
+    {1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1},
+    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+    {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 
 void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
+
+  const float cell_w = BIRDSEYE_SIZE/MAP_WIDTH;
+  const float cell_h = BIRDSEYE_SIZE/MAP_HEIGHT;
 
   for (int row = 0; row < MAP_HEIGHT; row++) {
     for (int col = 0; col < MAP_WIDTH; col++) {
@@ -56,20 +60,36 @@ void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
       }
 
       Rectangle square = {
-        .x = pos.x + (BIRDSEYE_SIZE/MAP_WIDTH) * col,
-        .y = pos.y + (BIRDSEYE_SIZE/MAP_HEIGHT) * row,
-        .width = BIRDSEYE_SIZE/MAP_WIDTH,
-        .height = BIRDSEYE_SIZE/MAP_HEIGHT
+        .x = pos.x + cell_w * col,
+        .y = pos.y + cell_h * row,
+        .width = cell_w,
+        .height = cell_h 
       };
       DrawRectangleRec(square, Fade(color, opacity));
-      Vector2 player_pos = Vector2Add(pos, Vector2Scale(player.pos, BIRDSEYE_SIZE/MAP_WIDTH));
-      DrawCircleV(player_pos, BIRDSEYE_SIZE/30, YELLOW);
 
-      // DrawLineEx(player_pos, Vector2Scale(Vector2Normalize(Vector2Rotate(player_pos, player.angle)), 100), 5, RED);
-      DrawLineEx(player_pos, Vector2Add(player_pos, Vector2Scale(Vector2Normalize(Vector2Rotate((Vector2){.x=1, .y=0}, player.angle-PI)), 100)), 2, RED);
-
+      DrawLineEx(
+        (Vector2){pos.x + col * cell_w, pos.y},
+        (Vector2){pos.x + col * cell_w, pos.y + MAP_WIDTH * cell_w},
+        1, 
+        GRAY
+      );
     }
+
+    DrawLineEx(
+      (Vector2){pos.x,                      pos.y + row * cell_h}, 
+      (Vector2){pos.x + MAP_WIDTH * cell_w, pos.y + row * cell_h},
+      1, 
+      GRAY
+    );
   }
+
+  Vector2 player_pos = {
+    .x = pos.x + cell_w * player.pos.x,
+    .y = pos.y + cell_h * player.pos.y
+  };
+  DrawCircleV(player_pos, 5, YELLOW);
+  DrawLineEx(player_pos, Vector2Add(player_pos, Vector2Scale(Vector2Normalize(Vector2Rotate((Vector2){.x=1, .y=0}, player.angle-PI)), 100)), 2, RED);
+
 }
 
 // returns 0 if no collision
@@ -101,8 +121,7 @@ int IsCollidingWithWalls(Vector2 pos){
 }
 
 void MoveUp(Player *player){
- Vector2 pos = Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), 0.1));
-  
+ Vector2 pos = Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), PLAYER_SPEED));
  uint8_t collision_bitset = IsCollidingWithWalls(pos);
  uint8_t ones_count = __builtin_popcount(collision_bitset);
  if(ones_count > 1){
@@ -132,7 +151,7 @@ void MoveUp(Player *player){
 }
 
 void MoveDown(Player *player){
- Vector2 pos= Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), -0.1));
+ Vector2 pos= Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), -PLAYER_SPEED));
  if(IsCollidingWithWalls(pos)){
     return;
   }
@@ -146,8 +165,8 @@ int main(int argc, char *argv[]) {
 
   Player player = {
     .pos = (Vector2) {
-      .x = 2,
-      .y = 2
+      .x = 1.5,
+      .y = 1.5
     },
     .angle = (3*PI)/2
   };
