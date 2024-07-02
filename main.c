@@ -39,6 +39,9 @@ Tile map[MAP_HEIGHT][MAP_WIDTH] = {
 
 void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
 
+  const float cell_w = BIRDSEYE_SIZE/MAP_WIDTH;
+  const float cell_h = BIRDSEYE_SIZE/MAP_HEIGHT;
+
   for (int row = 0; row < MAP_HEIGHT; row++) {
     for (int col = 0; col < MAP_WIDTH; col++) {
 
@@ -53,20 +56,36 @@ void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
       }
 
       Rectangle square = {
-        .x = pos.x + (BIRDSEYE_SIZE/MAP_WIDTH) * col,
-        .y = pos.y + (BIRDSEYE_SIZE/MAP_HEIGHT) * row,
-        .width = BIRDSEYE_SIZE/MAP_WIDTH,
-        .height = BIRDSEYE_SIZE/MAP_HEIGHT
+        .x = pos.x + cell_w * col,
+        .y = pos.y + cell_h * row,
+        .width = cell_w,
+        .height = cell_h 
       };
       DrawRectangleRec(square, Fade(color, opacity));
-      Vector2 player_pos = Vector2Add(pos, Vector2Scale(player.pos, BIRDSEYE_SIZE/MAP_WIDTH));
-      DrawCircleV(player_pos, BIRDSEYE_SIZE/30, YELLOW);
 
-      // DrawLineEx(player_pos, Vector2Scale(Vector2Normalize(Vector2Rotate(player_pos, player.angle)), 100), 5, RED);
-      DrawLineEx(player_pos, Vector2Add(player_pos, Vector2Scale(Vector2Normalize(Vector2Rotate((Vector2){.x=1, .y=0}, player.angle-PI)), 100)), 2, RED);
-
+      DrawLineEx(
+        (Vector2){pos.x + col * cell_w, pos.y},
+        (Vector2){pos.x + col * cell_w, pos.y + MAP_WIDTH * cell_w},
+        1, 
+        GREEN
+      );
     }
+
+    DrawLineEx(
+      (Vector2){pos.x,                      pos.y + row * cell_h}, 
+      (Vector2){pos.x + MAP_WIDTH * cell_w, pos.y + row * cell_h},
+      1, 
+      GREEN
+    );
   }
+
+  Vector2 player_pos = {
+    .x = pos.x + cell_w * player.pos.x,
+    .y = pos.y + cell_h * player.pos.y
+  };
+  DrawCircleV(player_pos, 5, YELLOW);
+  DrawLineEx(player_pos, Vector2Add(player_pos, Vector2Scale(Vector2Normalize(Vector2Rotate((Vector2){.x=1, .y=0}, player.angle-PI)), 100)), 2, RED);
+
 }
 
 int main(int argc, char *argv[]) {
