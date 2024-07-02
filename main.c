@@ -74,36 +74,60 @@ void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
 
 // returns 0 if no collision
 int IsCollidingWithWalls(Vector2 pos){
+ uint8_t collision_bitset = 0;
  for(int i = 0; i < 4; i++){
  Tile player_tile;
  switch (i){
       case 0:
-        player_tile = map[(uint8_t)(pos.y + COLLISION_BORDER)][(uint8_t)(pos.x + COLLISION_BORDER)];
+        player_tile = map[(uint8_t)(pos.y)][(uint8_t)(pos.x + COLLISION_BORDER)];
         break;
       case 1: 
-        player_tile = map[(uint8_t)(pos.y - COLLISION_BORDER)][(uint8_t)(pos.x + COLLISION_BORDER)];
+        player_tile = map[(uint8_t)(pos.y - COLLISION_BORDER)][(uint8_t)(pos.x)];
         break;
       case 2:
-        player_tile = map[(uint8_t)(pos.y - COLLISION_BORDER)][(uint8_t)(pos.x - COLLISION_BORDER)];
+        player_tile = map[(uint8_t)(pos.y )][(uint8_t)(pos.x - COLLISION_BORDER)];
         break;
       case 3:
-        player_tile = map[(uint8_t)(pos.y + COLLISION_BORDER)][(uint8_t)(pos.x - COLLISION_BORDER)];
+        player_tile = map[(uint8_t)(pos.y + COLLISION_BORDER)][(uint8_t)(pos.x)];
         break;
       default:
         assert(0 && "UNREACHABLE");
     }
  if(player_tile == WALL){
-    return 1;
+    collision_bitset |= 1 << i;
   }
  }
-  return 0;
+  return collision_bitset;
 }
 
 void MoveUp(Player *player){
  Vector2 pos = Vector2Add(player->pos, Vector2Scale(Vector2Rotate((Vector2){.x=1,.y=0}, player->angle-PI), 0.1));
- if(IsCollidingWithWalls(pos)){
+  
+ uint8_t collision_bitset = IsCollidingWithWalls(pos);
+ uint8_t ones_count = __builtin_popcount(collision_bitset);
+ if(ones_count > 1){
     return;
   }
+
+ switch (collision_bitset){
+    case 0b1:
+      player->pos.y = pos.y;
+      return;
+      break;
+    case 0b10:
+      player->pos.x = pos.x;
+      return;
+      break;
+    case 0b100:
+      player->pos.y = pos.y;
+      return;
+      break;
+    case 0b1000:
+      player->pos.x = pos.x;
+      return;
+      break;
+  }
+
  player->pos = pos;
 }
 
