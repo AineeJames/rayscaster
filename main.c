@@ -23,6 +23,7 @@ typedef struct {
 #define BIRDSEYE_SIZE 300.
 #define LOOK_SPEED 200
 #define PLAYER_SPEED 0.025
+#define NUM_RAYCASTS 50
 
 #define COLLISION_BORDER 0.25
 
@@ -78,6 +79,13 @@ void DrawBirdsEye(Vector2 pos, float opacity, Player player) {
 
   Vector2 player_pos = {.x = pos.x + cell_w * player.pos.x,
                         .y = pos.y + cell_h * player.pos.y};
+  // Draw raycast lines
+  for(int i = 0; i < NUM_RAYCASTS;i++){
+    Vector2 end_of_ray = Vector2Add(player_pos, 
+                                    Vector2Scale(Vector2Normalize(Vector2Rotate((Vector2){.x=1,.y=0}, (2 * PI * i)/ NUM_RAYCASTS)), 100));
+    DrawLineEx(player_pos, end_of_ray, 2, BLUE);
+  }
+
   DrawCircleV(player_pos, 5, YELLOW);
   DrawLineEx(player_pos,
              Vector2Add(player_pos, Vector2Scale(Vector2Normalize(Vector2Rotate(
